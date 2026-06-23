@@ -1,6 +1,13 @@
-def main():
-    print("Hello from backend!")
+from dotenv import load_dotenv
+load_dotenv()
 
+from fastapi import FastAPI
+from routers import papers
 
-if __name__ == "__main__":
-    main()
+app = FastAPI()
+
+app.include_router(papers.router)
+
+@app.get("/")
+async def health_check():
+    return {"status": "ok"}
