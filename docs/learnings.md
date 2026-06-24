@@ -27,6 +27,33 @@ feat(frontend): scaffold React app
 
 ---
 
+## Logging
+
+### loguru — log levels and when to use each
+
+```python
+from loguru import logger
+```
+
+| level | when to use |
+|-------|-------------|
+| `logger.debug()` | Internal details — variable values, sizes, flow tracing. Only useful during development. |
+| `logger.info()` | Normal operations — request received, paper saved, API call made. |
+| `logger.warning()` | Unexpected but recoverable — duplicate upload, empty PDF, missing field. |
+| `logger.error()` | Something failed — API error, DB error, parse failure. |
+
+**Rule:** log where something *happens*, not in every layer that calls it. If the AI service logs the Gemini call, the router doesn't need to repeat it.
+
+```python
+logger.info("Upload request: filename={}, user_id={}", filename, user_id)
+logger.warning("Duplicate upload detected: hash={}", content_hash)
+logger.error("Failed to parse Gemini response: {}", e)
+```
+
+Use `{}` placeholders instead of f-strings — loguru only formats the string if the log level is active, which is more efficient.
+
+---
+
 ## HTTP & APIs
 
 ### Content-Type and multipart/form-data

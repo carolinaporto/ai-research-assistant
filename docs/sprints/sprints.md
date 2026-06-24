@@ -24,32 +24,29 @@ Living document — updated as the project evolves. Sprints are defined and refi
 
 ---
 
-## Sprint 1 — Persistence: Papers + Folders
-**Status:** Draft
-**Goal:** Save uploaded papers to PostgreSQL. Introduce the data model: papers, folders, and the relationship between them.
+## Sprint 1 — Persistence + Structured Extraction
+**Status:** Completed
+**Goal:** Save uploaded papers to PostgreSQL with structured AI-extracted fields. Data model covers papers, folders, authors, and users.
 
-### Tentative deliverables
-- SQLAlchemy models + Alembic migrations
-- `papers` table (id, title, filename, raw text, summary, uploaded_at, folder_id)
-- `folders` table (id, name, created_at)
-- Updated upload endpoint — saves paper + summary after LLM call
-- `GET /papers` — list all papers
-- `GET /papers/{id}` — retrieve a single paper with its summary
-- `GET /folders` — list folders
-- `POST /folders` — create a folder
-- `PUT /papers/{id}/folder` — move paper to a folder
+### Notes
+Structured extraction (originally Sprint 2) was pulled into this sprint — it emerged naturally while designing the data model and the AI response schema.
 
----
-
-## Sprint 2 — Structured Extraction
-**Status:** Draft
-**Goal:** Instead of a free-text summary, extract structured information from the paper using Pydantic + Gemini's structured output.
-
-### Tentative deliverables
-- Define a Pydantic schema: objective, methodology, data used, conclusions, limitations
-- Update LLM call to return structured JSON
-- Store structured fields in the database
-- `GET /papers/{id}/extraction` endpoint
+### Deliverables
+- [x] Data model design: papers, folders, authors, paper_authors, paper_content, users
+- [x] SQLAlchemy models (`models/models.py`)
+- [x] Alembic setup + initial migration (all tables created in PostgreSQL)
+- [x] Repository layer (`repositories/papers.py`)
+- [x] Pydantic schema for AI response (`schemas/paper.py` — PaperAnalysis)
+- [x] Structured output from Gemini (JSON with name, authors, objective, summary, methodology, dataset, main_findings, limitations)
+- [x] Upload endpoint saves paper + raw text to DB
+- [x] Loguru logging across router, services, and repositories (terminal + file sink)
+- [x] Authors extracted and saved to `authors` + `paper_authors` tables
+- [x] Duplicate detection via SHA256 content hash
+- [x] `GET /papers` — list all papers for a user
+- [x] `GET /papers/{id}` — retrieve a single paper
+- [x] `GET /folders` — list folders
+- [x] `POST /folders` — create a folder
+- [x] `PUT /papers/{id}/folder` — move paper to a folder
 
 ---
 
