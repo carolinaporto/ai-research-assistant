@@ -1,18 +1,72 @@
-from fastapi import UploadFile, APIRouter, HTTPException
+from database import get_db
+from fastapi import UploadFile, APIRouter, HTTPException, Depends
+from loguru import logger
 from services import ai, pdf
+from repositories import papers as papers_repo
+from repositories import folders as folders_repo
+from repositories import authors as authors_repo
+
 
 router = APIRouter(
     prefix="/papers",
     tags=["papers"],
 )
 
+
 @router.post("/uploadfile/")
-async def create_upload_file(file: UploadFile):
+async def create_upload_file(file: UploadFile, db = Depends(get_db)):
+    user_id = 1  # Replace with actual user ID from authentication context
+    logger.info("Upload request received: filename={}, user_id={}", file.filename, user_id)
+
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Invalid content type. Only PDF files are allowed.")
-    
-    contents = await file.read()
-    text = pdf.extract_text(contents)
-    summary = ai.summarize_text(text)
-    return {"filename": file.filename, "summary": summary}
 
+    contents = await file.read()
+    content_hash = pdf.get_paper_hash(contents)
+
+    if papers_repo.get_paper_by_hash(db, user_id, content_hash):
+        logger.warning("Duplicate upload detected: hash={}, user_id={}", content_hash, user_id)
+        raise HTTPException(status_code=400, detail="This paper has already been uploaded.")
+
+    text = pdf.extract_text(contents)
+    if not text:
+        logger.warning("No text extracted from PDF: filename={}", file.filename)
+        raise HTTPException(status_code=400, detail="No text could be extracted from the PDF.")
+
+    analysis = ai.summarize_text(text)
+
+    paper, paper_id = papers_repo.create_paper(db, user_id, file.filename, content_hash, analysis)
+    papers_repo.create_paper_content(db, paper_id, text)
+    logger.info("Paper saved to database: paper_id={}, user_id={}", paper_id, user_id)
+
+    authors_repo.save_authors_for_paper(db, paper_id, analysis.authors)
+    logger.info("Authors saved for paper: paper_id={}, authors={}", paper_id, analysis.authors)
+
+    return {"filename": file.filename, "analysis": analysis}
+
+
+@router.get("/")
+def get_user_papers(user_id: int, db = Depends(get_db)):
+    return papers_repo.get_papers_by_user(db, user_id)
+
+
+@router.get("/{paper_id}")
+def get_paper(paper_id: int, user_id: int, db = Depends(get_db)):
+    paper = papers_repo.get_paper_by_id(db, user_id, paper_id)
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found.")
+    return paper
+
+
+@router.put("/{paper_id}/folder/{folder_id}")
+def move_paper_to_folder(paper_id: int, folder_id: int, user_id: int, db = Depends(get_db)):
+    paper = papers_repo.get_paper_by_id(db, user_id, paper_id)
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found.")
+
+    folder = folders_repo.get_folder_by_id(db, user_id, folder_id)
+    if not folder:
+        raise HTTPException(status_code=404, detail="Folder not found.")
+
+    papers_repo.move_paper_to_folder(db, user_id, paper_id, folder_id)
+    return {"message": "Paper moved to folder successfully."}
