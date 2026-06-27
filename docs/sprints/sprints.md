@@ -51,20 +51,51 @@ Structured extraction (originally Sprint 2) was pulled into this sprint — it e
 ---
 
 ## Sprint 3 — Critical Questions + Peer Review Mode
-**Status:** Draft
-**Goal:** Generate critical/analytical questions about the paper. Explore prompt engineering for a "peer reviewer" persona.
+**Status:** In Progress
+**Goal:** Given a paper already in the database, generate a set of critical question+answer pairs — like a peer reviewer would ask. Displayed as cards in the frontend: click to reveal the answer.
+
+### Decisions
+- Questions **are saved** to the database — so the user can come back and review them without re-calling the LLM
+- If questions already exist for a paper, return them from DB (no redundant API call)
+- LLM generates both the question and the answer in one call
+- Format: list of `{question, answer}` pairs
+
+### Deliverables
+- [ ] `paper_questions` table — `question_id`, `paper_id`, `question`, `answer`
+- [ ] Alembic migration for the new table
+- [ ] `PaperQuestion` Pydantic schema — `question: str`, `answer: str` + `PaperQuestions` with `questions: List[PaperQuestion]`
+- [ ] `generate_questions(text: str) -> PaperQuestions` in `services/ai.py`
+- [ ] Peer reviewer prompt — crafted and iterated until output is genuinely useful
+- [ ] `questions` repository — save and retrieve questions for a paper
+- [ ] `POST /papers/{paper_id}/questions` — generates, saves, and returns questions (skips LLM if already saved)
+- [ ] `GET /papers/{paper_id}/questions` — returns saved questions for a paper
 
 ---
 
 ## Sprint 4 — Semantic Search
 **Status:** Draft
-**Goal:** Embed papers using OpenAI `text-embedding-3-small`, store vectors in ChromaDB, enable semantic search across uploaded papers. (Migrate from Gemini to OpenAI starting here.)
+**Goal:** Embed papers using OpenAI `text-embedding-3-small`, store vectors in ChromaDB, enable semantic search across uploaded papers. Migrate from Gemini to OpenAI starting here.
+
+### Deliverables
+- [ ] Switch AI provider from Gemini to OpenAI (`openai` SDK, update `.env`)
+- [ ] Chunking strategy — split `paper_content` into overlapping chunks before embedding
+- [ ] Generate embeddings for each chunk using `text-embedding-3-small`
+- [ ] ChromaDB setup — local persistent vector store
+- [ ] Store embeddings on paper upload (extend `POST /papers/uploadfile/`)
+- [ ] `GET /papers/search?q=...` endpoint — embeds the query, retrieves top-k similar chunks, returns matching papers
 
 ---
 
 ## Sprint 5 — RAG Chat
 **Status:** Draft
-**Goal:** Chat with a specific paper using Retrieval-Augmented Generation. Ask questions, get answers grounded in the paper's content.
+**Goal:** Chat with a specific paper using Retrieval-Augmented Generation. Questions are answered using content retrieved from the paper, not from the model's memory.
+
+### Deliverables
+- [ ] Chunked retrieval — given a user question, find the most relevant chunks of a specific paper from ChromaDB
+- [ ] Context assembly — combine retrieved chunks into a prompt context window
+- [ ] `POST /papers/{paper_id}/chat` endpoint — accepts `{"message": "..."}`, returns `{"answer": "..."}`
+- [ ] Conversation history — keep track of the chat turns within a session (in-memory or simple DB table)
+- [ ] Grounding rule in prompt — model must only answer from retrieved context, not hallucinate
 
 ---
 
