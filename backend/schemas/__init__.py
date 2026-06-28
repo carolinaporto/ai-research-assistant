@@ -1,1 +1,1 @@
-from .paper import PaperAnalysis
+from .paper import PaperAnalysis, PaperQuestion, PaperQuestions

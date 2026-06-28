@@ -10,3 +10,12 @@ class PaperAnalysis(BaseModel):
     dataset: str
     main_findings: str
     limitations: str
+
+class PaperQuestion(BaseModel):
+    question_text: str
+    answer_text: str
+
+class PaperQuestions(BaseModel): 
+    questions: List[PaperQuestion]
+    
+

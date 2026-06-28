@@ -62,3 +62,15 @@ class PaperContent(Base):
 
     paper_id = Column(Integer, ForeignKey("papers.paper_id"), primary_key=True)
     content = Column(Text, nullable=False)
+
+
+class Question(Base):
+    __tablename__ = "paper_questions"
+
+    question_id = Column(Integer, primary_key=True)
+    paper_id = Column(Integer, ForeignKey("papers.paper_id"), nullable=False)
+    question_text = Column(Text, nullable=False)
+    answer_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    

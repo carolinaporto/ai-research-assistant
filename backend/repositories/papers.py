@@ -8,6 +8,14 @@ def get_papers_by_user(db, user_id):
 def get_paper_by_id(db, user_id, paper_id):
     return db.query(Paper).filter(Paper.user_id == user_id, Paper.paper_id == paper_id).first()
 
+def get_paper_content_by_id(db, paper_id):
+    paper_content = db.query(PaperContent).filter(PaperContent.paper_id == paper_id).first()
+    if paper_content:
+        return paper_content.content
+    else:
+        logger.warning("Paper content not found for paper_id={}", paper_id)
+        return None
+
 def get_paper_by_hash(db, user_id, content_hash):
     return db.query(Paper).filter(Paper.user_id == user_id, Paper.content_hash == content_hash).first()
 

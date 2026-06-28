@@ -3,7 +3,6 @@ from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 from repositories import folders as folders_repo
 
-
 router = APIRouter(
     prefix="/folders",
     tags=["folders"],
