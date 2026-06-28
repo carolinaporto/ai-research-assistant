@@ -54,6 +54,34 @@ Use `{}` placeholders instead of f-strings — loguru only formats the string if
 
 ---
 
+## Database & Migrations
+
+### Alembic — common commands
+
+Alembic is a migration tool for SQLAlchemy. It tracks the history of changes to your database schema.
+
+| command | what it does |
+|---------|-------------|
+| `alembic init alembic` | Set up Alembic in the project (only once) |
+| `alembic revision --autogenerate -m "message"` | Compare models vs DB and generate a migration file |
+| `alembic upgrade head` | Apply all pending migrations to the DB |
+| `alembic downgrade -1` | Undo the last migration |
+| `alembic current` | Show which migration the DB is currently at |
+| `alembic history` | List all migrations in order |
+
+**Workflow when you add or change a model:**
+```bash
+# 1. Edit your SQLAlchemy model in models/models.py
+# 2. Generate the migration
+alembic revision --autogenerate -m "add paper_questions table"
+# 3. Apply it
+alembic upgrade head
+```
+
+**Important:** Alembic compares your models against the DB — so your `DATABASE_URL` must be set and the container must be running before you generate or apply migrations.
+
+---
+
 ## HTTP & APIs
 
 ### Content-Type and multipart/form-data

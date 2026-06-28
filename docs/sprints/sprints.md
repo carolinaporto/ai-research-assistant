@@ -51,7 +51,7 @@ Structured extraction (originally Sprint 2) was pulled into this sprint — it e
 ---
 
 ## Sprint 3 — Critical Questions + Peer Review Mode
-**Status:** In Progress
+**Status:** Completed
 **Goal:** Given a paper already in the database, generate a set of critical question+answer pairs — like a peer reviewer would ask. Displayed as cards in the frontend: click to reveal the answer.
 
 ### Decisions
@@ -61,14 +61,16 @@ Structured extraction (originally Sprint 2) was pulled into this sprint — it e
 - Format: list of `{question, answer}` pairs
 
 ### Deliverables
-- [ ] `paper_questions` table — `question_id`, `paper_id`, `question`, `answer`
-- [ ] Alembic migration for the new table
-- [ ] `PaperQuestion` Pydantic schema — `question: str`, `answer: str` + `PaperQuestions` with `questions: List[PaperQuestion]`
-- [ ] `generate_questions(text: str) -> PaperQuestions` in `services/ai.py`
-- [ ] Peer reviewer prompt — crafted and iterated until output is genuinely useful
-- [ ] `questions` repository — save and retrieve questions for a paper
-- [ ] `POST /papers/{paper_id}/questions` — generates, saves, and returns questions (skips LLM if already saved)
-- [ ] `GET /papers/{paper_id}/questions` — returns saved questions for a paper
+- [x] `paper_questions` table — `question_id`, `paper_id`, `question_text`, `answer_text`, `created_at`
+- [x] Alembic migration for the new table
+- [x] `PaperQuestion` Pydantic schema — `question_text: str`, `answer_text: str` + `PaperQuestions` with `questions: List[PaperQuestion]`
+- [x] `generate_questions(text: str) -> PaperQuestions` in `services/ai.py`
+- [x] Peer reviewer prompt — generates 5-10 analytical question+answer pairs per paper
+- [x] `questions` repository — create, get by paper, delete one, delete all for a paper
+- [x] `POST /questions/` — generates, saves, and returns questions (returns from DB if already exist)
+- [x] `GET /questions/{paper_id}` — returns saved questions for a paper
+- [x] `DELETE /questions/{question_id}` — deletes a single question
+- [x] `DELETE /questions/paper/{paper_id}/all` — deletes all questions for a paper
 
 ---
 
