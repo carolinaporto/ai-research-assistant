@@ -7,9 +7,11 @@ requires-python = ">=3.9"
 dependencies = [
     "alembic>=1.16.5",
     "anthropic>=0.111.0",
+    "chromadb>=1.5.9",
     "fastapi>=0.128.8",
     "google-genai>=1.47.0",
     "loguru>=0.7.3",
+    "openai>=2.44.0",
     "psycopg2-binary>=2.9.12",
     "pymupdf>=1.26.5",
     "python-dotenv>=1.2.1",

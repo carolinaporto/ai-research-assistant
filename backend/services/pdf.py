@@ -1,5 +1,6 @@
 import fitz
 import hashlib
+from loguru import logger
 
 def extract_text(file_bytes: bytes) -> str:
     """
@@ -15,7 +16,8 @@ def extract_text(file_bytes: bytes) -> str:
     text = ""
     for page in doc:
         text += page.get_text()
-    return text
+    logger.debug("Extracted text from PDF with {} pages", len(doc))
+    return text.replace('\x00', '')
 
 def get_paper_hash(file_bytes: bytes) -> str:
     """
@@ -28,6 +30,8 @@ def get_paper_hash(file_bytes: bytes) -> str:
     try:
         sha256_hash = hashlib.sha256()
         sha256_hash.update(file_bytes)
+        logger.debug("Generated SHA-256 hash for the file")
         return sha256_hash.hexdigest()
     except Exception as e:
+        logger.error("Error generating hash: {}", e)
         raise Exception(f"Error generating hash: {e}")

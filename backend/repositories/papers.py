@@ -1,6 +1,7 @@
 from datetime import datetime
 from loguru import logger
-from models.models import Paper, PaperContent
+from services import vector_store
+from models.models import Paper, PaperContent, PaperAuthors, Question
 
 def get_papers_by_user(db, user_id):
     return db.query(Paper).filter(Paper.user_id == user_id).all()
@@ -34,15 +35,42 @@ def create_paper(db, user_id, filename, content_hash, analysis):
         limitations=analysis.limitations,
     )
     db.add(paper)
-    db.commit()
+    db.flush()
     db.refresh(paper)
     logger.info("Created paper: paper_id={}, user_id={}", paper.paper_id, user_id)
-    return paper, paper.paper_id
+    return paper.paper_id
+
+def delete_paper(db, user_id, paper_id):
+    paper = get_paper_by_id(db, user_id, paper_id)
+    if paper:
+        for q in db.query(Question).filter(Question.paper_id == paper_id).all():
+            db.delete(q)
+        db.flush()
+
+        for pa in db.query(PaperAuthors).filter(PaperAuthors.paper_id == paper_id).all():
+            db.delete(pa)
+        db.flush()
+
+        content = db.query(PaperContent).filter(PaperContent.paper_id == paper_id).first()
+        if content:
+            db.delete(content)
+        db.flush()
+
+        chroma_collection = vector_store.get_collection()
+        chroma_collection.delete(where={"paper_id": paper_id})
+        logger.debug("Deleted chunks from vector store for paper_id={}", paper_id)
+
+        db.delete(paper)
+        db.commit()
+        logger.info("Deleted paper: paper_id={}, user_id={}", paper_id, user_id)
+    else:
+        logger.warning("Attempted to delete non-existent paper: paper_id={}, user_id={}", paper_id, user_id)
+
 
 def create_paper_content(db, paper_id: int, content: str):
     paper_content = PaperContent(paper_id=paper_id, content=content)
     db.add(paper_content)
-    db.commit()
+    db.flush()
     logger.debug("Saved raw text for paper_id={}", paper_id)
 
 def move_paper_to_folder(db, user_id, paper_id, folder_id):

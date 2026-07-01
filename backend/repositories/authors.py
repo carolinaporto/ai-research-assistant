@@ -10,7 +10,7 @@ def get_or_create_author(db, first_name: str, last_name: str):
             last_name=last_name,
         )
         db.add(author)
-        db.commit()
+        db.flush()
         db.refresh(author)
         logger.info("Created new author: author_id={}, first_name={}, last_name={}", author.author_id, author.first_name, author.last_name)
     else:
@@ -25,7 +25,7 @@ def associate_author_with_paper(db, author_id: int, paper_id: int):
             paper_id=paper_id,
         )
         db.add(association)
-        db.commit()
+        db.flush()
         logger.info("Associated author with paper: author_id={}, paper_id={}", author_id, paper_id)
     else:
         logger.info("Author already associated with paper: author_id={}, paper_id={}", author_id, paper_id)

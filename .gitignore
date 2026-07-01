@@ -217,4 +217,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-logs/
+logs/backend/chroma_db/
+backend/chroma_db/

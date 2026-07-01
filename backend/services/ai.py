@@ -3,8 +3,10 @@ from google import genai
 from google.genai import types
 from loguru import logger
 from schemas import PaperAnalysis, PaperQuestions
+from openai import OpenAI
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client_openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client_gemini = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def summarize_text(text: str) -> PaperAnalysis:
     """
@@ -41,7 +43,7 @@ def summarize_text(text: str) -> PaperAnalysis:
 
     """
     logger.debug("Sending {} characters to Gemini", len(text))
-    response = client.models.generate_content(
+    response = client_gemini.models.generate_content(
       model="gemini-2.5-flash",
       contents=prompt,
       config=types.GenerateContentConfig(
@@ -88,7 +90,7 @@ def generate_questions(text: str) -> PaperQuestions:
     {text}
     """
     logger.debug("Sending {} characters to Gemini for question generation", len(text))
-    response = client.models.generate_content(
+    response = client_gemini.models.generate_content(
       model="gemini-2.5-flash",
       contents=prompt,
       config=types.GenerateContentConfig(
@@ -103,3 +105,26 @@ def generate_questions(text: str) -> PaperQuestions:
     except Exception as e:
         logger.error("Failed to parse Gemini question generation response: {}", e)
         raise Exception(f"Error generating questions: {e}")
+    
+
+def get_embeddings(chunks: list[str]) -> list[list[float]]:
+    """
+    Generates embeddings for a list of text chunks using the OpenAI API.
+    Args:
+        chunks (list[str]): A list of text chunks to embed.
+    Returns:
+        list[list[float]]: A list of embeddings corresponding to each chunk.
+    """
+
+    logger.debug("Generating embeddings for {} chunks", len(chunks))
+    try:
+        response = client_openai.embeddings.create(
+            model="text-embedding-3-small",
+            input=chunks
+        )
+        embeddings = [item.embedding for item in response.data]
+        logger.debug("Embeddings generated successfully")
+        return embeddings
+    except Exception as e:
+        logger.error("Failed to generate embeddings: {}", e)
+        raise Exception(f"Error generating embeddings: {e}")
