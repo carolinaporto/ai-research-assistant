@@ -75,16 +75,22 @@ Structured extraction (originally Sprint 2) was pulled into this sprint — it e
 ---
 
 ## Sprint 4 — Semantic Search
-**Status:** Draft
-**Goal:** Embed papers using OpenAI `text-embedding-3-small`, store vectors in ChromaDB, enable semantic search across uploaded papers. Migrate from Gemini to OpenAI starting here.
+**Status:** Completed
+**Goal:** Embed papers using OpenAI `text-embedding-3-small`, store vectors in ChromaDB, enable semantic search across uploaded papers.
+
+### Notes
+OpenAI was added alongside Gemini (not replacing it) — Gemini still handles summarization and question generation, OpenAI handles embeddings only.
 
 ### Deliverables
-- [ ] Switch AI provider from Gemini to OpenAI (`openai` SDK, update `.env`)
-- [ ] Chunking strategy — split `paper_content` into overlapping chunks before embedding
-- [ ] Generate embeddings for each chunk using `text-embedding-3-small`
-- [ ] ChromaDB setup — local persistent vector store
-- [ ] Store embeddings on paper upload (extend `POST /papers/uploadfile/`)
-- [ ] `GET /papers/search?q=...` endpoint — embeds the query, retrieves top-k similar chunks, returns matching papers
+- [x] OpenAI SDK installed, `OPENAI_API_KEY` added to `.env`
+- [x] Chunking strategy — `services/chunking.py` splits text into overlapping chunks (`chunk_size=1000`, `overlap=200`)
+- [x] Embeddings via `text-embedding-3-small` — `get_embeddings()` in `services/ai.py`
+- [x] ChromaDB setup — `services/vector_store.py` with `PersistentClient`, add/search/delete operations
+- [x] Embeddings stored on upload — chunks embedded and saved to ChromaDB after paper is saved to PostgreSQL
+- [x] `GET /papers/search?q=...` — embeds query, retrieves top-k chunks, returns matching papers filtered by `user_id`
+- [x] `DELETE /papers/{paper_id}` — deletes paper and all related records (questions, authors, content, ChromaDB chunks)
+- [x] Atomic upload — single `db.commit()` at the end, `db.rollback()` on failure; `db.flush()` in repositories
+- [x] NUL character fix in `services/pdf.py` — strips `\x00` from extracted text
 
 ---
 
